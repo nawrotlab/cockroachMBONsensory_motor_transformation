@@ -1,8 +1,9 @@
 import numpy as np
-import pandas as pd
+import pandas as pd                #to use dataframes
 from scipy.io import loadmat       #to load .mat files
 import os                          #to change path
 import re                          #to use regular expressions
+from sklearn.utils import shuffle  #to shuffle data
 
 def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0,LightCodes = 'NaN',LightNames ='NaN' ,LightPulsesN ='NaN',TWLight='NaN', TWBaselLight='NaN'):
 
@@ -171,6 +172,37 @@ def natural_keys(text):
     '''
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
+
+def MergeNeuronal_MLR(df, DataFrameMLR, TWMLR=[0., 2.], T0=0.):
+    '''
+    Merge neuronal data with MLR data and returns the dataframe for the intersection of animals of MLR and neuronal data
+    :param df: neuronal data frame
+    :param DataFrameMLR: MLR data frame
+    :return: df: merged MLR and neuronal data frame
+    '''
+    df=df.copy()
+    df["A_ID:short"] = df.AnimalID.str.slice(stop=4)
+    DataFrameMLR['MLRTime'] = DataFrameMLR['MLRTime'] - T0
+
+    RecAnimalID = np.array(df["A_ID:short"])
+    MLRAnimalSet = set(np.unique(DataFrameMLR['Animal-ID']))  # gemerate set with MLR Animal
+    MLRAnimalSet.intersection_update(set(np.unique(RecAnimalID)))  # keep only animals that are in both sets
+    df = df[df['A_ID:short'].isin(MLRAnimalSet)]
+    DataFrameMLR = DataFrameMLR[DataFrameMLR['Animal-ID'].isin(MLRAnimalSet)]
+    df.reset_index(drop=True, inplace=True)
+    DataFrameMLR.reset_index(drop=True, inplace=True)
+    DataFrameMLR[["Trial", "MLRTime"]] = DataFrameMLR.apply(lambda x: CalculateTrial(x, df), axis=1,
+                                                            result_type="expand")
+    DataFrameMLR.rename(columns={"Stimulus-ID": "StimID", "Animal-ID": "A_ID:short"}, inplace=True)
+    DataFrameMLR = DataFrameMLR[['A_ID:short', "StimID", 'Trial', 'MLRTime']]
+    # DataFrameMLR["Trial"] = DataFrameMLR['Trial'].astype(int)
+    DataFrameMLR.MLRTime = DataFrameMLR.apply(
+        lambda x: x.MLRTime if (x.MLRTime >= TWMLR[0] and x.MLRTime <= TWMLR[1]) else np.nan, axis=1)
+    df = df.drop(['MLRTime', 'MLRTime_x', 'MLRTime_y', 'MLRTime_z'], axis=1, errors='ignore')
+    df = df.merge(DataFrameMLR, on=["A_ID:short", "StimID", 'Trial'])
+    df.drop(["A_ID:short"], inplace=True, axis=1)
+    return df
+
 def GenDFCorr(DataFrame, DataFrameMLR,OdorCodes, TWMLR):
 
     """ generates a dataframe by combining DataFrame with spiketimes and Dataframe with behavioral data 
@@ -247,6 +279,71 @@ def CalculateTrial(row, pDF):
         return (int(pDF.loc[idxDF, 'Trial']), MLRTimeToWrite)
     else:
         return (np.nan, np.nan)
+
+def LimitDFtoStimulus(df, odors):
+    '''
+    Filters dataframe for the given odors
+    :param df: Dataframe to filter
+    :param odors: List of odors to keep
+    :return: Filtered dataframe
+    '''
+    DataFrameCleaned=df.copy(deep=True).reset_index(drop=True)
+    boolIndex=[x in odors for x in DataFrameCleaned.StimID]
+    DataFrameCleaned=DataFrameCleaned[boolIndex].reset_index(drop=True)
+    return DataFrameCleaned
+
+def LimitDFtoUnits(df, Units):
+    '''
+    Filters dataframe for the given units
+    :param df: Dataframe to filter
+    :param Units: List of units to keep
+    :return: Filtered dataframe
+    '''
+    df=df.copy(deep=True).reset_index(drop=True)
+    boolIndex=[x in Units for x in df.RealUnit]
+    df=df[boolIndex].reset_index(drop=True)
+    return df
+
+
+def FindUnits(df, MinResponse, Odorwise=False):
+    '''
+    Finds units that responds at least MinResponse times for min(count(MLR), count(~MLR))
+    :param df: Dataframe to look into
+    :param MinResponse: Minimal number of responses
+    :param Odorwise: If True, looks for units that respond to each odor separately with MinResponses
+    :return: List of sets of units that fulfill the criteria
+    '''
+    Sets=[]
+    if not Odorwise:
+        DF_Response=df.groupby('RealUnit').agg({'MLR': np.sum}).reset_index()
+        Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
+        DF_Response=df.groupby('RealUnit').agg({'MLR': lambda x: np.sum(~x)}).reset_index()
+        Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
+    else:
+        for odor in np.unique(df['StimID']):
+            df_loc=LimitDFtoStimulus(df, [odor])
+            DF_Response=df_loc.groupby('RealUnit').agg({'MLR': np.sum}).reset_index()
+            Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
+            DF_Response=df_loc.groupby('RealUnit').agg({'MLR': lambda x: np.sum(~x)}).reset_index()
+            Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
+    RemainingUnits=set.intersection(*Sets)
+    return RemainingUnits
+
+def ShuffleMLRs(df):
+    '''
+    Shuffles MLRs for each unit separately (to keep the same number of responses)
+    Only the boolean MLR column is shuffled, not the MLRTime
+    :param df: Dataframe to shuffle
+    :return: Shuffled dataframe
+    '''
+    for counter,(name, group) in enumerate(df.groupby(['RealUnit'])):
+        tmp=group.copy(deep=True)
+        tmp['MLR']=shuffle(np.array(tmp['MLR']))
+        if counter==0:
+            tmpDF= tmp.copy(deep=True)
+        else:
+            tmpDF=pd.concat([tmpDF, tmp.copy(deep=True)], ignore_index=True)
+    return tmpDF
 
 
 # Only run when this file is run itself
