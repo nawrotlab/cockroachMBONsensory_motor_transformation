@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.io import loadmat       #to load .mat files
 import os                          #to change path
+import re                          #to use regular expressions
 
 def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0,LightCodes = 'NaN',LightNames ='NaN' ,LightPulsesN ='NaN',TWLight='NaN', TWBaselLight='NaN'):
 
@@ -158,7 +159,6 @@ def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0
 
     return DataFrame
 
-import re
 
 def atoi(text):
     return int(text) if text.isdigit() else text
@@ -220,6 +220,33 @@ def GenDFCorr(DataFrame, DataFrameMLR,OdorCodes, TWMLR):
 
     return DataFrameCorr, MLRAnimalSet
 
+
+def find_files(path, pattern="*.mat"):
+    '''
+    Find files in a directory
+    :param path:
+    :param pattern:
+    :return:
+    '''
+    files=glob.glob(path + pattern)
+    files.sort()
+    return files
+
+
+def CalculateTrial(row, pDF):
+    '''
+    Calculate trial number for a given row, considering the time of the row (RecOnTime)
+    :param row: row of a dataframe - not index
+    :param pDF: Dataframe to look into
+    :return: (Trial, MLRTime (relative to Trial start)
+    '''
+    idxDF=np.where((row['Animal-ID'] == pDF['A_ID:short']) & (pDF['StimID'] == row['Stimulus-ID']) & (pDF['RecOnTime'] >= (row['Time [sec]']-0.5)) & (pDF['RecOnTime'] <= (row["Time [sec]"]+1.5)))
+    if len(idxDF[0]):
+        idxDF=idxDF[0][0]
+        MLRTimeToWrite=row['MLR-Time-[sec]']-pDF.loc[idxDF, 'RecOnTime']
+        return (int(pDF.loc[idxDF, 'Trial']), MLRTimeToWrite)
+    else:
+        return (np.nan, np.nan)
 
 
 # Only run when this file is run itself
