@@ -182,7 +182,6 @@ def MergeNeuronal_MLR(df, DataFrameMLR, TWMLR=[0., 2.], T0=0.):
     '''
     df=df.copy()
     df["A_ID:short"] = df.AnimalID.str.slice(stop=4)
-    DataFrameMLR['MLRTime'] = DataFrameMLR['MLRTime'] - T0
 
     RecAnimalID = np.array(df["A_ID:short"])
     MLRAnimalSet = set(np.unique(DataFrameMLR['Animal-ID']))  # gemerate set with MLR Animal
@@ -193,6 +192,7 @@ def MergeNeuronal_MLR(df, DataFrameMLR, TWMLR=[0., 2.], T0=0.):
     DataFrameMLR.reset_index(drop=True, inplace=True)
     DataFrameMLR[["Trial", "MLRTime"]] = DataFrameMLR.apply(lambda x: CalculateTrial(x, df), axis=1,
                                                             result_type="expand")
+    DataFrameMLR['MLRTime'] = DataFrameMLR['MLRTime'] - T0
     DataFrameMLR.rename(columns={"Stimulus-ID": "StimID", "Animal-ID": "A_ID:short"}, inplace=True)
     DataFrameMLR = DataFrameMLR[['A_ID:short', "StimID", 'Trial', 'MLRTime']]
     # DataFrameMLR["Trial"] = DataFrameMLR['Trial'].astype(int)
@@ -201,7 +201,7 @@ def MergeNeuronal_MLR(df, DataFrameMLR, TWMLR=[0., 2.], T0=0.):
     df = df.drop(['MLRTime', 'MLRTime_x', 'MLRTime_y', 'MLRTime_z'], axis=1, errors='ignore')
     df = df.merge(DataFrameMLR, on=["A_ID:short", "StimID", 'Trial'])
     df.drop(["A_ID:short"], inplace=True, axis=1)
-    return df
+    return df, MLRAnimalSet
 
 def GenDFCorr(DataFrame, DataFrameMLR,OdorCodes, TWMLR):
 
