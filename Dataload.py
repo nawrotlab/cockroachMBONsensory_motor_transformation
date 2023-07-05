@@ -201,6 +201,7 @@ def MergeNeuronal_MLR(df, DataFrameMLR, TWMLR=[0., 2.], T0=0.):
     df = df.drop(['MLRTime', 'MLRTime_x', 'MLRTime_y', 'MLRTime_z'], axis=1, errors='ignore')
     df = df.merge(DataFrameMLR, on=["A_ID:short", "StimID", 'Trial'])
     df.drop(["A_ID:short"], inplace=True, axis=1)
+    df['MLR'] = ~df['MLRTime'].isnull()
     return df, MLRAnimalSet
 
 def GenDFCorr(DataFrame, DataFrameMLR,OdorCodes, TWMLR):
