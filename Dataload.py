@@ -1,4 +1,6 @@
 import numpy as np
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd                #to use dataframes
 from scipy.io import loadmat       #to load .mat files
 import os                          #to change path
@@ -157,6 +159,10 @@ def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0
     if CorrectOdorOnset==False:
         print('false')
 
+    # remove path from AnimalID - only works if all files are in the same folder
+    Path = os.path.dirname(file) + '/'
+    DataFrame['AnimalID'] = DataFrame.AnimalID.apply(
+        lambda x: x.replace(Path, ""))  # Remove path from AnimalID
 
     return DataFrame
 
@@ -327,6 +333,16 @@ def FindUnits(df, MinResponse, Odorwise=False):
             Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
             DF_Response=df_loc.groupby('RealUnit').agg({'MLR': lambda x: np.sum(~x)}).reset_index()
             Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
+    RemainingUnits=set.intersection(*Sets)
+    return RemainingUnits
+
+def FindUnits2(df, MinResponse, MLR=False):
+    Sets=[]
+    if MLR:
+        DF_Response=df.groupby('RealUnit').agg({'MLR': lambda x: np.sum(x)}).reset_index()
+    else:
+        DF_Response=df.groupby('RealUnit').agg({'MLR': lambda x: np.sum(~x)}).reset_index()
+    Sets.append(set(DF_Response[DF_Response['MLR']>=MinResponse]['RealUnit']))
     RemainingUnits=set.intersection(*Sets)
     return RemainingUnits
 
