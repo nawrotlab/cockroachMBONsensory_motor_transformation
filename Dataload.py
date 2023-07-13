@@ -6,6 +6,7 @@ from scipy.io import loadmat       #to load .mat files
 import os                          #to change path
 import re                          #to use regular expressions
 from sklearn.utils import shuffle  #to shuffle data
+import glob
 
 def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0,LightCodes = 'NaN',LightNames ='NaN' ,LightPulsesN ='NaN',TWLight='NaN', TWBaselLight='NaN'):
 
@@ -71,11 +72,12 @@ def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0
                             StimDur = np.nanmin(OffTimes[TrialTimepoint < OffTimes]) - RecOnTime
                             RecOffTime = np.nanmin(OffTimes[TrialTimepoint < OffTimes])
 
-                            CutStim = UnitTime[np.logical_and(((RecOnTime + TWOdor[0]) < UnitTime),
-                                                              ((RecOnTime + TWOdor[1]) > UnitTime))] - (
-                                                  RecOnTime + CorrectOdorOnset)
-                            CutBasel = UnitTime[np.logical_and(((RecOnTime + TWBaselOdor[0]) < UnitTime),
-                                                               ((RecOnTime + TWBaselOdor[1]) > UnitTime))] - RecOnTime
+                            CutStim = UnitTime[np.logical_and(((RecOnTime + TWOdor[0] + CorrectOdorOnset) < UnitTime),
+                                                              ((RecOnTime + TWOdor[1] + CorrectOdorOnset) > UnitTime))] - \
+                                                                                (RecOnTime + CorrectOdorOnset)
+                            CutBasel = UnitTime[np.logical_and(((RecOnTime + TWBaselOdor[0]+CorrectOdorOnset) < UnitTime),
+                                                               ((RecOnTime + TWBaselOdor[1]+CorrectOdorOnset) > UnitTime))] - \
+                                                             (RecOnTime + CorrectOdorOnset)
 
                             DataFrame = DataFrame.append({'AnimalID': os.path.splitext(file)[0], 'UnitID': CurrentUnit,
                                                           'RealUnit': MaxUnit + UnitNumber, 'Trial': TrialNumber,
@@ -136,10 +138,12 @@ def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0
                             StimDur = np.nanmin(OffTimes[TrialTimepoint < OffTimes]) - RecOnTime
                             RecOffTime = np.nanmin(OffTimes[TrialTimepoint < OffTimes])
 
-                            CutStim = UnitTime[np.logical_and(((RecOnTime + TWOdor[0]) < UnitTime),
-                                                              ((RecOnTime + TWOdor[1]) > UnitTime))] - (RecOnTime + CorrectOdorOnset)
-                            CutBasel = UnitTime[np.logical_and(((RecOnTime + TWBaselOdor[0]) < UnitTime),
-                                                               ((RecOnTime + TWBaselOdor[1]) > UnitTime))] - RecOnTime
+                            CutStim = UnitTime[np.logical_and(((RecOnTime + TWOdor[0]+CorrectOdorOnset) < UnitTime),
+                                                              ((RecOnTime + TWOdor[1]+CorrectOdorOnset) > UnitTime))] - \
+                                                                (RecOnTime + CorrectOdorOnset)
+                            CutBasel = UnitTime[np.logical_and(((RecOnTime + TWBaselOdor[0]+CorrectOdorOnset) < UnitTime),
+                                                               ((RecOnTime + TWBaselOdor[1]+CorrectOdorOnset) > UnitTime))] - \
+                                                                    (RecOnTime + CorrectOdorOnset)
 
                             DataFrame = DataFrame.append({'AnimalID': os.path.splitext(file)[0], 'UnitID': CurrentUnit,
                                                           'RealUnit': MaxUnit + UnitNumber, 'Trial': TrialNumber,
