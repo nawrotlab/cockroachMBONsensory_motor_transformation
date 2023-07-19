@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
 import sys
 import Dataload
 import HelperFunctions
+import os
+import glob
 
 try:
     import pandarallel
@@ -67,27 +68,30 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         print("Debbuging")
         df['SpikeRatesStim'] = df.parallel_apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel), axis=1)
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000],
+                                                   kernel), axis=1)
         df['BLRate'] = df.parallel_apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
     else:
         df['SpikeRatesBasel'] = df.apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, TW, kernel), axis=1)
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel), axis=1)
         df['BLRate'] = df.apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
 
-    Time=HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel)
+    Time = HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0],
+                                            [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel)
 
     kernel_Corr = HelperFunctions.exponential_kernel(250, 1.0, nstd=6)
     kernel_Corr = kernel_Corr/np.max(kernel_Corr)
-    kernel_Corr=kernel_Corr[len(kernel_Corr)//2:-1]
+    kernel_Corr = kernel_Corr[len(kernel_Corr)//2:-1]
 
     if Single_Trial_BL:
         if n_processes > 1:
             df['SpikeRatesStim'] = df.parallel_apply(
-                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr, x.BLRate), axis=1)
+                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim,kernel_Corr,
+                                                                           x.BLRate), axis=1)
         else:
             df['SpikeRatesStim'] = df.apply(
                 lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr, x.BLRate),
@@ -141,9 +145,9 @@ def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A',
     df = df.copy(deep=True)
 
 
-    #limit to stims
+    # limit to stims
     df = Dataload.LimitDFtoStimulus(df, Stims)
-    df = df[df['MLR']==True].reset_index(drop=True)
+    df = df[df['MLR'] == True].reset_index(drop=True)
 
 
     # estimate firing rates
@@ -151,24 +155,27 @@ def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A',
     if n_processes > 1:
         df['SpikeRatesBasel'] = df.parallel_apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
-        print("Debbuging")
+        print("Debugging")
         df['SpikeRatesStim'] = df.parallel_apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel), axis=1)
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes,
+                                                   [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel), axis=1)
         df['BLRate'] = df.parallel_apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
     else:
         df['SpikeRatesBasel'] = df.apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, TW, kernel), axis=1)
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000],
+                                                   kernel), axis=1)
         df['BLRate'] = df.apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
 
-    Time=HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel)
+    Time = HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0],
+                                            [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel)
 
     kernel_Corr = HelperFunctions.exponential_kernel(250, 1.0, nstd=6)
     kernel_Corr = kernel_Corr/np.max(kernel_Corr)
-    kernel_Corr=kernel_Corr[len(kernel_Corr)//2:-1]
+    kernel_Corr = kernel_Corr[len(kernel_Corr)//2:-1]
 
 
     if n_processes > 1:
@@ -188,7 +195,7 @@ def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A',
         result_type='expand')
 
 
-    #df['SpikeRatesBordersHigh'] = df['SpikeRatesBordersHigh'].apply(
+    # df['SpikeRatesBordersHigh'] = df['SpikeRatesBordersHigh'].apply(
     #    lambda x: x if x > (np.max(kernel) * 1000 * MinSpike) else np.max(kernel) * 1000 * MinSpike)
 
     df['NeuronalOnset'] = df.apply(
@@ -198,37 +205,46 @@ def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A',
     return df
 
 
-def PlotLatencyCDF(DF, title="CDF", ax=None):
+def PlotLatencyCDF(DF, title="CDF", color=[(0, 0.6, 0, 1), (0, 0, 0.6, 1),(0, 0, 0.6, 0.5)], TWOdor=[0,2], ax=None):
     if ax is None:
-        fig, ax=plt.subplots(1,1, dpi=140)
-    NeuronalOnsets=DF.NeuronalOnset.tolist()
-    NeuronalOnsets=np.array([x for x in NeuronalOnsets if not np.isnan(x)])
-    NeuronalOnsets=np.sort(NeuronalOnsets)
-    yNe=np.hstack((0, np.ones_like(NeuronalOnsets)))
-    NeuronalOnsets=np.hstack((0, NeuronalOnsets))
-    NeuronalOnsets=np.hstack(( NeuronalOnsets, TWOdor[1]))
+        fig, ax = plt.subplots(1, 1, dpi=140)
 
-    yNe=np.cumsum(yNe)
-    if yNe[-1]>0:
-        yNe/=yNe[-1]
-    yNe=np.hstack((yNe, yNe[-1]))
-    ax.step(NeuronalOnsets,yNe, where='post', label="Neuronal")
+    MLROnsets = DF.MLRTime.tolist()
+    MLROnsets = np.array([x for x in MLROnsets if not np.isnan(x)])
+    MLROnsets = np.sort(MLROnsets)
+    yNe = np.hstack((0, np.ones_like(MLROnsets)))
+    MLROnsets = np.hstack((0, MLROnsets))
+    MLROnsets = np.hstack((MLROnsets, TWOdor[1]))
 
-    MLROnsets=DF.MLRTime.tolist()
-    MLROnsets=np.array([x for x in MLROnsets if not np.isnan(x)])
-    MLROnsets=np.sort(MLROnsets)
-    yMLR=np.hstack((0, np.ones_like(MLROnsets)))
-    MLROnsets=np.hstack((0, MLROnsets))
-    MLROnsets=np.hstack(( MLROnsets, TWMLR[1]))
+    yNe = np.cumsum(yNe)
+    if yNe[-1] > 0:
+        yNe /= yNe[-1]
+    yNe = np.hstack((yNe, yNe[-1]))
 
-    yMLR=np.cumsum(yMLR)
-    if yMLR[-1]>0:
-        yMLR/=yMLR[-1]
-    yMLR=np.hstack((yMLR, yMLR[-1]))
-    ax.step(MLROnsets,yMLR, where='post', label="MLR")
+    ax.step(MLROnsets, yNe, where='post', label="MLR", color=color[1], linewidth=0.9)
+
+    MLR_OnsetsPlus = MLROnsets + 0.05
+    MLR_OnsetsMinus = MLROnsets - 0.05
+
+    ax.fill_between(MLR_OnsetsMinus, yNe, step="post", color=color[2], linewidth=0)
+    ax.fill_between(MLR_OnsetsPlus, yNe, step="post", color='w', linewidth=0)
+
+    NeuronalOnsets = DF.NeuronalOnset.tolist()
+    NeuronalOnsets = np.array([x for x in NeuronalOnsets if not np.isnan(x)])
+    NeuronalOnsets = np.sort(NeuronalOnsets)
+    yNe = np.hstack((0, np.ones_like(NeuronalOnsets)))
+    NeuronalOnsets = np.hstack((0, NeuronalOnsets))
+    NeuronalOnsets = np.hstack((NeuronalOnsets, TWOdor[1]))
+
+    yNe = np.cumsum(yNe)
+    if yNe[-1] > 0:
+        yNe/= yNe[-1]
+    yNe = np.hstack((yNe, yNe[-1]))
+    ax.step(NeuronalOnsets, yNe, where='post', label="Neuronal", color=color[0],
+            linewidth=0.9)
 
 
-    ax.set_xlabel("time [s]")
+    ax.set_xlabel("Time [s]")
     ax.set_ylabel("CDF")
     ax.set_title(title)
     ax.legend()
@@ -236,13 +252,16 @@ def PlotLatencyCDF(DF, title="CDF", ax=None):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    #load data
-    Path = "/mnt/agmn-srv-1/storage/agmn-srv-1_home/carican1/Ephys_Auswertung/olfactory_visual/DataCorr/"  # Pfad zu den Daten
-    file_name = "MLR_070121.xlsx"  # name for excel file
+    import scipy
+
+    # load data
+    os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/FinalFigure")  # go to folder with data
+    Files = glob.glob("*.mat")  # open all files in folder
+    file_name = "MLR_data.xlsx"  # name for Excel file
     sheet = "Roh"
 
     # define time windows for df generation
-    T0=0.09
+    T0 = 0.09
     TWOdor = [0., 2.0]
     TWBaselOdor = [-20, -0.5]
     TWMLR = [0.0, 2.0]
@@ -250,32 +269,31 @@ if __name__ == '__main__':
     OdorCodes = ['J', 'F', 'H', 'K', 'I', 'D', 'B', 'C', 'A', 'G', 'E']
     OdorNames = ['1-Pen', '1-Hex', '1-Hep', '1-Oct', 'Hep', 'Oct', '2-Hep', 'Iso', 'Ben', 'Cin', 'Con']
 
-
     UseSingeTrialBL = True
 
     BorderLim = 0.97
     MinSpike = 2.25
-    TauFR = 250  # defines sigma for gaussian kernel (half of gaussian width)
+    TauFR = 250
     WidthFactor = 5
     dt = 1.
     kernel = HelperFunctions.exponential_kernel(TauFR, dt=dt, nstd=WidthFactor)
     AnimalsExclude = ["CA70", "CA69", "CA71"]  # exclude because of too low frame rate
 
 
-    files=Dataload.find_files(Path, pattern="*.mat")
-    df = Dataload.GenDF(files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=T0)
+    df = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=T0)
 
     df.drop(df[[x[0:4] in AnimalsExclude for x in df['AnimalID']]].index,
             inplace=True)
     df.reset_index(drop=True, inplace=True)
     
-    df_MLR = pd.read_excel(io=Path + file_name, sheet_name=sheet)
-    df,_ = Dataload.MergeNeuronal_MLR(df, df_MLR, T0=T0, TWMLR=TWMLR)
+    df_MLR = pd.read_excel(io=file_name, sheet_name=sheet)
+    df, _ = Dataload.MergeNeuronal_MLR(df, df_MLR, T0=T0, TWMLR=TWMLR)
 
-    Latencydf = Latency(df, kernel, TWOdor, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim, Single_Trial_BL=UseSingeTrialBL, Stims=['A', 'C', 'G'])
+    Latencydf = Latency(df, kernel, TWOdor, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
+                        Single_Trial_BL=UseSingeTrialBL, Stims=['A', 'C', 'G'])
 
-    Latencydf=Latencydf[Latencydf['MLR']==True]
-    Odors=['A', 'C', 'G']
+    Latencydf = Latencydf[Latencydf['MLR']==True]
+    Odors = ['A', 'C', 'G']
     for Stim in Odors:
         PlotLatencyCDF(Latencydf[Latencydf.StimID == Stim], title=Stim)
         plt.xlim([0., 2.])
@@ -283,7 +301,8 @@ if __name__ == '__main__':
         plt.show()
 
 
-    PooledLatencydf=Latency_pooled(df, kernel, TWOdor, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim, Stims=['A', 'C', 'G'])
+    PooledLatencydf = Latency_pooled(df, kernel, TWOdor, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
+                                     Stims=['A', 'C', 'G'])
 
     print(PooledLatencydf.groupby(['StimID']))
     print(PooledLatencydf.groupby('StimID').agg({'NeuronalOnset': [np.mean, np.min, np.max]}))
@@ -291,8 +310,6 @@ if __name__ == '__main__':
     #PooledLatencydf[['RealUnit', 'StimID', 'MLRTime', 'NeuronalOnset']].to_csv(
     #    'PopulationNeuronalOnset.csv')
 
-    import scipy
-
-    CPooled=Dataload.LimitDFtoStimulus(PooledLatencydf, ['C'])
+    CPooled = Dataload.LimitDFtoStimulus(PooledLatencydf, ['C'])
     print(scipy.stats.wilcoxon(CPooled.NeuronalOnset, CPooled.MLRTime))
 
