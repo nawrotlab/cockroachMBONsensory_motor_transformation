@@ -50,12 +50,7 @@ except FileNotFoundError:
     print("File not found, please run Figure4.py first")
     raise
 
-#Maxima = {4: 34.563429239543325, 5: 3.504108503812676, 6: 7.4513089046702765, 7: 13.582322125948838, 8: 83.18571139243342,
-# 9: 11.712228497724277, 10: 28.796190913727195, 11: 23.299364831206475, 12: 26.57745467630763, 13: 5.7757642496715205,
-# 14: 18.58274246517002, 15: 23.172658555730006, 16: 40.539778106957584, 17: 17.396946249329922, 18: 13.181685652193018,
-# 19: 15.198913655127601, 20: 8.456442793284545, 21: 10.201569929549226, 22: 22.27826535008664, 23: 12.430281081252522,
-# 26: 4.9805199614862765, 27: 37.35269474048714, 28: 11.832082965549327}  # maximal firing rates per unit calculated in
-# Figure4.py, needed for normalizing firing rate for each unit
+
 kernel = HelperFunctions.alpha_kernel(sigmaFR, 1.0, calibrateMass=True)
 Edge = sigmaFR * 3
 tMin = (TWPlot[0] * 1000) - Edge
@@ -122,6 +117,7 @@ for OdorNum, Odor in enumerate(FoodOdors):
             TrialsStimMLR1ST = np.hstack((TrialsStimMLR1ST, TrialsStimMLR1))
             TrialsBaselMLR1ST = np.hstack((TrialsBaselMLR1ST, TrialsBaselMLR1))
             n = n + 1
+
         SpTStimMLR0 = np.hstack((SpTStimMLR0, tMax + 2))
         SpTStimMLR1 = np.hstack((SpTStimMLR1, tMax + 2))
         SpTBaselMLR0 = np.hstack((SpTBaselMLR0, TWBaselOdor[1] + 2))
@@ -313,5 +309,5 @@ sub5.set_position([l5, b4, w4, h1])
 sub5.text(-0.78, 1.07, 'E', size=LS, weight='bold')
 
 
-plt.savefig(os.path.join('Figures', 'FigS3.svg'), dpi=300)
+plt.savefig(os.path.join('Figures', 'FigS3.jpg'), dpi=300)
 plt.show()

@@ -512,6 +512,6 @@ ll15, bb15, ww15, hh15 = colorbar.get_position().bounds
 colorbar.set_position([ll15 + 0.05, b7, ww15, h7])
 colorbar.figure.axes[-1].yaxis.label.set_size(LS)
 
-plt.savefig(os.path.join('Figures', 'Figure3.png'), dpi=300)
+plt.savefig(os.path.join('Figures', 'Figure3.jpg'), dpi=300)
 plt.show()
 

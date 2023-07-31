@@ -477,7 +477,7 @@ sub8.spines["top"].set_visible(False)
 sub8.set_xlim(xlimClose[0], 2)
 sub8.set_ylim(0.1, 1.01)
 sub8.text(-0.42, 1.045, 'H', weight='bold', size=LetterSize)
-plt.savefig(os.path.join('Figures', 'Figure4.png'), dpi=300)
+plt.savefig(os.path.join('Figures', 'Figure4.jpg'), dpi=300)
 
 plt.show()
 

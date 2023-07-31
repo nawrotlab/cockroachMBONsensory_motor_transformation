@@ -117,5 +117,5 @@ l3 = l2+w1+0.04
 ax3.set_position([l3, b1, w1, h3])
 ax3.text(-1.7, 215, 'C', size=LS, weight='bold')
 
-fig.savefig(os.path.join('Figures', 'FigS2.png'), dpi=300)
+fig.savefig(os.path.join('Figures', 'FigS2.jpg'), dpi=300)
 plt.show()

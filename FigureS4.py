@@ -124,5 +124,5 @@ sub2.set_position([l2, b1, w2, h2])
 sub2.text(-1, 1.85, 'B', size=LS, weight='bold')
 
 
-fig.savefig(os.path.join('Figures', 'FigS4.png'), dpi=300)
+fig.savefig(os.path.join('Figures', 'FigS4.jpg'), dpi=300)
 plt.show()
