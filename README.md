@@ -44,7 +44,7 @@ pip install -r requirements.txt
 ```
 To run the code, run the following command in the terminal:
 ```bash
-python3 Figures/Figure2.py
+python3 Figure2.py
 ```
 This command will run the code to reproduce Figure 2 of the paper. To reproduce another figure, the corresponding file
 has to be run.
