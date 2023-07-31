@@ -214,7 +214,7 @@ def MergeNeuronal_MLR(df, DataFrameMLR, TWMLR=[0., 2.], T0=0.):
     df['MLR'] = ~df['MLRTime'].isnull()
     return df, MLRAnimalSet
 
-def GenDFCorr(DataFrame, DataFrameMLR,OdorCodes, TWMLR):
+def GenDFBehavior(DataFrame, DataFrameMLR,OdorCodes, TWMLR, CorrectOdorOnset = 0.):
 
     """ generates a dataframe by combining DataFrame with spiketimes and Dataframe with behavioral data 
              
@@ -387,7 +387,7 @@ if __name__ == '__main__':
 
     DataFrameMLR = pd.read_excel(io = "MLR_data.xlsx", sheet_name = "Roh")  # create dataframe from Excel file
     TWMLR = [0.09, 2.09]
-    DFCorr,MLRAnimalSet = GenDFCorr(DataFrame, DataFrameMLR, OdorCodes, TWMLR)
+    DFCorr, MLRAnimalSet = GenDFBehavior(DataFrame, DataFrameMLR, OdorCodes, TWMLR)
 
     print(DFCorr)
     print(MLRAnimalSet)
