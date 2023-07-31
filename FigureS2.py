@@ -1,10 +1,19 @@
-import Dataload
+from Functions import Dataload
 import matplotlib.pyplot as plt
 import os
-import glob
 import pandas as pd
 import seaborn as sns
+from Data import DataSelection
+import argparse
 
+# command line optional argument for Datapath
+parser = argparse.ArgumentParser(description='Path to data folder')
+parser.add_argument('--path', type=str, default="Data",
+                    help='Path to data folder')
+args = parser.parse_args()
+Path = args.path
+
+Files = [os.path.join(Path, x) for x in DataSelection.DataCorr]
 
 OdorShift = 0.09
 TWOdor = [-3., 5]
@@ -20,10 +29,8 @@ NonFoodOdors = ['F', 'H', 'K', 'J', 'I', 'D', 'B']
 file_name = "MLR_data.xlsx"     # name for Excel file
 sheet = "Roh"
 
-os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/FinalFigure")
-Files = glob.glob("*.mat")     # open all files in folder
 DataFrame = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=OdorShift)
-DataFrameMLR = pd.read_excel(io=file_name, sheet_name=sheet)       # create dataframe from Excel file
+DataFrameMLR = pd.read_excel(io=os.path.join(Path, file_name), sheet_name=sheet)       # create dataframe from Excel file
 DfCorr, _ = Dataload.MergeNeuronal_MLR(DataFrame, DataFrameMLR, TWMLR=TWMLR, T0=OdorShift)
 StimDur = TWStimulation[1]-TWStimulation[0]
 DfCorr['CountStim'] = DfCorr.StimSpikeTimes.apply(lambda x: len(x[(x>=TWMLR[0])&(x<=TWMLR[1])]))
@@ -110,5 +117,5 @@ l3 = l2+w1+0.04
 ax3.set_position([l3, b1, w1, h3])
 ax3.text(-1.7, 215, 'C', size=LS, weight='bold')
 
-fig.savefig('SensoryAdaptation.png', dpi=300)
+fig.savefig(os.path.join('Figures', 'FigS2.png'), dpi=300)
 plt.show()

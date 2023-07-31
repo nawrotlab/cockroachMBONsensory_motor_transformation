@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 import sys
-import Dataload
-import HelperFunctions
+from Functions import Dataload, HelperFunctions
 
 try:
     import pandarallel
@@ -31,10 +30,10 @@ def PCA_Neuronal(df, kernel, TW, TW_BL, n_components=2, Stims=['A', 'C', 'G'], n
     #limit to stims
     df = Dataload.LimitDFtoStimulus(df, Stims)
     # get animal sets with and without MLR for each stimulus
-    ConsideredUnits=Dataload.FindUnits(df, 1, Odorwise=True)
+    ConsideredUnits= Dataload.FindUnits(df, 1, Odorwise=True)
 
     # limit to found units
-    df=Dataload.LimitDFtoUnits(df, ConsideredUnits)
+    df= Dataload.LimitDFtoUnits(df, ConsideredUnits)
     print('Number of units considered: ', len(ConsideredUnits))
 
     # estimate firing rates
@@ -58,7 +57,7 @@ def PCA_Neuronal(df, kernel, TW, TW_BL, n_components=2, Stims=['A', 'C', 'G'], n
     df['SpikeRatesBasel'] = df.apply(lambda x: list(np.array(x.SpikeRatesBasel) - x.BLRate),
                                                                axis=1)
 
-    Time=HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
+    Time= HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
 
     #prepare data for PCA (stacking and averaging)
     df = df.groupby(['RealUnit', 'StimID', 'MLR']).agg(
@@ -115,7 +114,7 @@ if __name__ == '__main__':
 
 
 
-    files=Dataload.find_files(Path, pattern="*.mat")
+    files= Dataload.find_files(Path, pattern="*.mat")
     df = Dataload.GenDF(files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=0.09)
     df['AnimalID'] = df.AnimalID.apply(
         lambda x: x.replace(Path, ""))  # Remove path from AnimalID

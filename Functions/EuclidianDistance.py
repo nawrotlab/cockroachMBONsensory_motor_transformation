@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
 import sys
-import Dataload
-import HelperFunctions
+from Functions import Dataload, HelperFunctions
 import itertools
 
 try:
@@ -32,10 +30,10 @@ def Euclidian_MLR(df, kernel, TW, TW_BL, normalize=True, Norm='L2', MinResponses
     #limit to stims
     df = Dataload.LimitDFtoStimulus(df, Stims)
     # get animal sets with and without MLR for each stimulus
-    ConsideredUnits=Dataload.FindUnits(df, MinResponses, Odorwise=False)
+    ConsideredUnits= Dataload.FindUnits(df, MinResponses, Odorwise=False)
 
     # limit to found units
-    df=Dataload.LimitDFtoUnits(df, ConsideredUnits)
+    df= Dataload.LimitDFtoUnits(df, ConsideredUnits)
     print('Number of units considered: ', len(ConsideredUnits))
 
     # estimate firing rates
@@ -59,7 +57,7 @@ def Euclidian_MLR(df, kernel, TW, TW_BL, normalize=True, Norm='L2', MinResponses
     df['SpikeRatesBasel'] = df.apply(lambda x: list(np.array(x.SpikeRatesBasel) - x.BLRate),
                                                                axis=1)
 
-    Time=HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
+    Time= HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
     df['MaxStim'] = df['SpikeRatesStim'].apply(np.max)
     FRsNorm = df.groupby(['RealUnit']).agg({'MaxStim': np.max})
     LenghtRates = np.min(df['SpikeRatesStim'].apply(lambda x: len(x)))
@@ -115,10 +113,10 @@ def Euclidian_Odors(df, kernel, TW, TW_BL, MLR=False, normalize=True, Norm='L2',
     #limit to stims
     df = Dataload.LimitDFtoStimulus(df, Stims)
     # get animal sets with and without MLR for each stimulus
-    ConsideredUnits=Dataload.FindUnits(df, MinResponses, Odorwise=False)
+    ConsideredUnits= Dataload.FindUnits(df, MinResponses, Odorwise=False)
 
     # limit to found units
-    df=Dataload.LimitDFtoUnits(df, ConsideredUnits)
+    df= Dataload.LimitDFtoUnits(df, ConsideredUnits)
     print('Number of units considered: ', len(ConsideredUnits))
 
     if MLR:
@@ -147,7 +145,7 @@ def Euclidian_Odors(df, kernel, TW, TW_BL, MLR=False, normalize=True, Norm='L2',
                                                               axis=1)
     df['SpikeRatesBasel'] = df.apply(lambda x: list(np.array(x.SpikeRatesBasel) - x.BLRate),
                                                                axis=1)
-    Time=HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
+    Time= HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
 
 
 
@@ -240,7 +238,7 @@ if __name__ == '__main__':
 
 
 
-    files=Dataload.find_files(Path, pattern="*.mat")
+    files= Dataload.find_files(Path, pattern="*.mat")
     df = Dataload.GenDF(files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=0.09)
     df['AnimalID'] = df.AnimalID.apply(
         lambda x: x.replace(Path, ""))  # Remove path from AnimalID

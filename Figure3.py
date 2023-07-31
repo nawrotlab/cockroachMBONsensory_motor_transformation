@@ -1,14 +1,22 @@
-import Dataload
-import HelperFunctions
+from Functions import Dataload, HelperFunctions
 import numpy as np
 import matplotlib.pyplot as plt
 import os                          # to change path
-import glob
 import pandas as pd
-import spiketools
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import pickle
+from Data import DataSelection
+import argparse
+
+# command line optional argument for Datapath
+parser = argparse.ArgumentParser(description='Path to data folder')
+parser.add_argument('--path', type=str, default="Data",
+                    help='Path to data folder')
+args = parser.parse_args()
+Path = args.path
+
+Files = [os.path.join(Path, x) for x in DataSelection.Figure3]
 
 TWOdor = [-1.5, 5]
 TWBaselOdor = [-20, -0.5]
@@ -23,8 +31,6 @@ OdorColor = {'C': ((0.765, 0.588, 0.09, 1), (0.914, 0.737, 0.247, 1), (0.95, 0.8
              'A': ((0.008, 0.251, 0.455, 1), (0.325, 0.525, 0.694, 1), (0.537, 0.675, 0.788, 1))}
 
 
-os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/DataOlfactory")  # go to folder with data
-Files = glob.glob("*.mat")     # open all files in folder
 DataFrame = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=OdorShift)
 
 DataFrameUnit = DataFrame[DataFrame['RealUnit'] == 15]
@@ -40,7 +46,7 @@ DataFrame_Cin = DataFrameUnit[DataFrameUnit['StimID'] == 'G']
 
 DataFramePID = []
 try:
-    with open("PID.pkl", 'rb') as f:
+    with open(os.path.join(Path,"PID.pkl"), 'rb') as f:
         while True:
             DataFramePID.append(pickle.load(f))
 except:
@@ -124,11 +130,11 @@ for ind, Stimulus in enumerate(OdorNames):      # loops over each Stimulus
         yBasel = np.hstack((yBasel, idt))  # adds one object for the last trial
         spiketime = np.vstack([st, y])  # merges spiketimes with respective trialID
         spiketimeBasel = np.vstack([stBasel, yBasel])  # merges spiketimes with respective trialID
-        spikerates = spiketools.kernel_rate(spiketime, kernel, tlim=[tMin, tMax],
-                                            pool=True)  # calculates spikerates with moving kernel
-        spikeratesBasel = spiketools.kernel_rate(spiketimeBasel, kernel,
-                                                 tlim=[TWBaselOdor[0] * 1000, TWBaselOdor[1] * 1000],
+        spikerates = HelperFunctions.kernel_rate(spiketime, kernel, tlim=[tMin, tMax],
                                                  pool=True)  # calculates spikerates with moving kernel
+        spikeratesBasel = HelperFunctions.kernel_rate(spiketimeBasel, kernel,
+                                                      tlim=[TWBaselOdor[0] * 1000, TWBaselOdor[1] * 1000],
+                                                      pool=True)  # calculates spikerates with moving kernel
         spikeratesMinusBasel = spikerates[0] - np.average(spikeratesBasel[0])
         matrix[idy, :] = spikeratesMinusBasel  # creates matrix with spikerates for all units of one stimulus
         AvSpikeRate = np.average(
@@ -506,6 +512,6 @@ ll15, bb15, ww15, hh15 = colorbar.get_position().bounds
 colorbar.set_position([ll15 + 0.05, b7, ww15, h7])
 colorbar.figure.axes[-1].yaxis.label.set_size(LS)
 
-plt.savefig('Figure3.png', dpi=300)
+plt.savefig(os.path.join('Figures', 'Figure3.png'), dpi=300)
 plt.show()
 

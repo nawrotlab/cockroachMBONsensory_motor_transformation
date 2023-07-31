@@ -1,4 +1,4 @@
-import Dataload
+from Functions import Dataload
 import numpy as np
 import matplotlib.pyplot as plt
 import os                          # to change path
@@ -6,7 +6,17 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
-import glob
+from Data import DataSelection
+import argparse
+
+# command line optional argument for Datapath
+parser = argparse.ArgumentParser(description='Path to data folder')
+parser.add_argument('--path', type=str, default="Data",
+                    help='Path to data folder')
+args = parser.parse_args()
+Path = args.path
+
+Files = [os.path.join(Path, x) for x in DataSelection.Figure2]
 
 TWOdor = [0.09, 2.09]
 TWBaselOdor = [-20, -0.5]
@@ -17,9 +27,10 @@ OdorCodes = ['F', 'H', 'K', 'J', 'I', 'D', 'B', 'C', 'A', 'G', 'E']
 OdorNames = ['1-Hex', '1-Hep', '1-Oct', '1-Pen', 'Hep', 'Oct', '2-Hep', 'Iso', 'Ben', 'Cin', 'Ctr']
 file_name = "MLR_data.xlsx"     # name for Excel file
 sheet = "Roh"
-os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/DataMLR")  # go to folder with data
-DataFrameMLR = pd.read_excel(io=file_name, sheet_name=sheet)       # create dataframe from Excel file
-Files = glob.glob("*.mat")     # opens all files in folder
+
+
+DataFrameMLR = pd.read_excel(io=os.path.join(Path,file_name), sheet_name=sheet)       # create dataframe from Excel file
+
 
 DataFrame = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=0.09)
 DFCorr, MLRAnimalSet = Dataload.GenDFBehavior(DataFrame, DataFrameMLR, OdorCodes, TWMLR, CorrectOdorOnset=0.09)
@@ -137,6 +148,6 @@ l3, b3, w3, h3 = ax3.get_position().bounds
 ax3.set_position([l3 + 0.09, b1, w3, h1])
 
 
-plt.savefig('Figure2'+'.jpg', dpi=1200)
+plt.savefig(os.path.join('Figures', 'Figure2.jpg'), dpi=1200)
 plt.show()
 

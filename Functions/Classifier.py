@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
 import sys
-import Dataload
-import HelperFunctions
+from Functions import Dataload, HelperFunctions
 import random
 import os
 
@@ -92,9 +90,9 @@ def ClassifierTrial(DataFrameCleaned, RemainingUnits, time, LenghtRates, samples
     return Accuracy
 def Classifier(df, kernel, TW, TW_BL, shuffle=False, Odorwise=False, MinResponses=10, trials=24, samples=50, samplestest=20, force_restimate=False, Stims=['A', 'C', 'G'],nt=1 , n_processes=None):
     if shuffle == True:
-        Filename = 'ClassifierResultsShuffled.pkl'
+        Filename = os.path.join('Functions', 'ClassifierResultsShuffled.pkl')
     else:
-        Filename = 'ClassifierResults.pkl'
+        Filename = os.path.join('Functions', 'ClassifierResults.pkl')
     if force_restimate == False:
         try:
             with open(Filename, 'rb') as f:
@@ -132,10 +130,10 @@ def Classifier(df, kernel, TW, TW_BL, shuffle=False, Odorwise=False, MinResponse
     #limit to stims
     df = Dataload.LimitDFtoStimulus(df, Stims)
     # get animal sets with and without MLR for each stimulus
-    ConsideredUnits=Dataload.FindUnits(df, MinResponses, Odorwise=Odorwise)
+    ConsideredUnits= Dataload.FindUnits(df, MinResponses, Odorwise=Odorwise)
 
     # limit to found units
-    df=Dataload.LimitDFtoUnits(df, ConsideredUnits)
+    df= Dataload.LimitDFtoUnits(df, ConsideredUnits)
     print('Number of units considered: ', len(ConsideredUnits))
 
     # estimate firing rates
@@ -151,7 +149,7 @@ def Classifier(df, kernel, TW, TW_BL, shuffle=False, Odorwise=False, MinResponse
         lambda x: list(np.array(x.SpikeRatesStim) - HelperFunctions.ToFiringRates(x.BaselSpikeTimes, TW_BL)), axis=1)
 
 
-    Time=HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
+    Time= HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0], TW, kernel)
 
     if nt > 1:
         # get every nth timepoint and redurce estimated firing rates accordingly
@@ -187,8 +185,8 @@ def Classifier(df, kernel, TW, TW_BL, shuffle=False, Odorwise=False, MinResponse
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     #load data
-    Path = "/mnt/agmn-srv-1/storage/agmn-srv-1_home/carican1/Ephys_Auswertung/olfactory_visual/DataCorr/"  # Pfad zu den Daten
-    file_name = "MLR_070121.xlsx"  # name for excel file
+    Path = ".."+os.path.sep+"Data"+os.path.sep  # Pfad zu den Daten
+    file_name = "MLR_data.xlsx"  # name for excel file
     sheet = "Roh"
 
     # define time windows for df generation
@@ -204,14 +202,12 @@ if __name__ == '__main__':
     WidthFactor = 6
     dt = 1.
     # kernel = spiketools.gaussian_kernel(sigmaFR, dt, nstd=WidthFactor)          #generates kernel for spiketools.kernel_rate
-    kernel = HelperFunctions.alpha_kernel(TauFR, dt=dt, nstd=WidthFactor,  calibrateMass=False)
+    kernel = HelperFunctions.alpha_kernel(TauFR, dt=dt, nstd=WidthFactor, calibrateMass=False)
 
 
 
-    files=Dataload.find_files(Path, pattern="*.mat")
+    files= Dataload.find_files(Path, pattern="*.mat")
     df = Dataload.GenDF(files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=0.09)
-    df['AnimalID'] = df.AnimalID.apply(
-        lambda x: x.replace(Path, ""))  # Remove path from AnimalID
     df_MLR = pd.read_excel(io=Path + file_name, sheet_name=sheet)
     df,_ = Dataload.MergeNeuronal_MLR(df, df_MLR, T0=0.09, TWMLR=TWMLR)
     # run classifier without shuffling

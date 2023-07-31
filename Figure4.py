@@ -1,17 +1,21 @@
 import pickle
-
-import Dataload
-import HelperFunctions
-import Latency
-import Classifier
-from scipy.io import loadmat       # to load .mat files
+from Functions import Dataload, PCA, Latency, Classifier, HelperFunctions
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import glob
 import pandas as pd
-import PCA
 from scipy import stats
+from Data import DataSelection
+import argparse
+
+# command line optional argument for Datapath
+parser = argparse.ArgumentParser(description='Path to data folder')
+parser.add_argument('--path', type=str, default="Data",
+                    help='Path to data folder')
+args = parser.parse_args()
+Path = args.path
+
+Files = [os.path.join(Path, x) for x in DataSelection.DataCorr]
 
 OdorShift = 0.09
 TWOdor = [-3., 5]
@@ -38,12 +42,12 @@ OdorColorMLR = {'C': ((0.765, 0.588, 0.09, 1), (0.914, 0.737, 0.247, 1), (0.95, 
 NeuroColor = {'MLR': (0.102, 0.416, 0.278), 'NoMLR': (0.502, 0.675, 0.6), 'Both': (0.298, 0.5411, 0.439, 1)}
 NeuroColorShadow = {'MLR': (0.459, 0.647, 0.565), 'NoMLR': (0.698, 0.804, 0.757)}
 
-os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/FinalFigure")  # go to folder with data
-Files = glob.glob("*.mat")     # open all files in folder
+#os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/FinalFigure")  # go to folder with data
+#Files = glob.glob("*.mat")     # open all files in folder
 
 DataFrame = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=OdorShift)
 Stimuli = np.unique(DataFrame['StimID'])                 # extract all Stimuli
-DataFrameMLR = pd.read_excel(io=file_name, sheet_name=sheet)       # create dataframe from Excel file
+DataFrameMLR = pd.read_excel(io=os.path.join(Path, file_name), sheet_name=sheet)       # create dataframe from Excel file
 DfCorr, MLRAnimalSet = Dataload.MergeNeuronal_MLR(DataFrame, DataFrameMLR, TWMLR=TWMLR, T0=OdorShift)
 
 
@@ -166,7 +170,7 @@ for idy, Unit in enumerate(UniqueRealUnits):  # loops over each Unit
     SpTTrBasel = np.vstack([SpTBasel, TrialsBaselST])
     SpRaBasel = HelperFunctions.kernel_rate(SpTTrBasel, kernel, tlim=[TWBaselOdor[0] * 1000, TWBaselOdor[1] * 1000], pool=True)
     SpRaStimMLR0 = HelperFunctions.kernel_rate(SpTTrStimMLR0, kernel, tlim=[tMin, tMax], pool=True)
-    SpRaBaselMLR0 = HelperFunctions.kernel_rate(SpTTrBaselMLR0, kernel,tlim=[TWBaselOdor[0] * 1000,TWBaselOdor[1] * 1000], pool=True)
+    SpRaBaselMLR0 = HelperFunctions.kernel_rate(SpTTrBaselMLR0, kernel, tlim=[TWBaselOdor[0] * 1000, TWBaselOdor[1] * 1000], pool=True)
     SpRaMLR0 = SpRaStimMLR0[0][0] - np.average(SpRaBaselMLR0[0])
     SpRaStimMLR1 = HelperFunctions.kernel_rate(SpTTrStimMLR1, kernel, tlim=[tMin, tMax], pool=True)
     SpRaBaselMLR1 = HelperFunctions.kernel_rate(SpTTrBaselMLR1, kernel, tlim=[TWBaselOdor[0] * 1000, TWBaselOdor[1] * 1000], pool=True)
@@ -240,7 +244,7 @@ DFLatency.drop(DFLatency[[x[0:4] in AnimalsExclude for x in DFLatency['AnimalID'
 DFLatency.reset_index(drop=True, inplace=True)
 DFLatency, _ = Dataload.MergeNeuronal_MLR(DFLatency, DataFrameMLR, T0=OdorShift, TWMLR=TWMLR)
 LatencyDF = Latency.Latency(DFLatency, kernel, TWStimulation, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
-                    Single_Trial_BL=UseSingeTrialBL, Stims=['A', 'C', 'G'])
+                            Single_Trial_BL=UseSingeTrialBL, Stims=['A', 'C', 'G'])
 LatencyDF = LatencyDF[LatencyDF['MLR'] == True]
 
 # classifier for subplot 8
@@ -250,14 +254,14 @@ dt = 1.
 KernelClassifier = HelperFunctions.alpha_kernel(TauFR, dt=dt, nstd=WidthFactor, calibrateMass=False)
 InterestingOdors = ['C', 'G', 'A']
 ClassifierAccuracy, ClassifierTime, ConsideredUnits = Classifier.Classifier(DfCorr, KernelClassifier, TWClassifier, TWBaselOdor, shuffle=False, Odorwise=False,
-                                                 MinResponses=10, trials=24, samples=50, samplestest=20,
-                                                 force_restimate=False,Stims=InterestingOdors, nt=1)
+                                                                            MinResponses=10, trials=24, samples=50, samplestest=20,
+                                                                            force_restimate=False, Stims=InterestingOdors, nt=1)
 
 print(ConsideredUnits)
 
 Accuracy_Shuff, Time_Shuff, ConsideredUnits = Classifier.Classifier(DfCorr, KernelClassifier, TWClassifier, TWBaselOdor, shuffle=True, Odorwise=False,
-                                                 MinResponses=10, trials=24, samples=50, samplestest=20,
-                                                 force_restimate=False, Stims=InterestingOdors, nt=1)
+                                                                    MinResponses=10, trials=24, samples=50, samplestest=20,
+                                                                    force_restimate=False, Stims=InterestingOdors, nt=1)
 
 print(ConsideredUnits)
 
@@ -413,7 +417,7 @@ sub5.text(-0.42, 1.07, 'E', weight='bold', size=LetterSize)
 
 # sub6
 sub6 = fig.add_subplot(4, 2, 4)
-Latency.PlotLatencyCDF(LatencyDF[LatencyDF.StimID == 'A'], title='', color=OdorColorMLR['A'],TWOdor=[0,2], ax=sub6)
+Latency.PlotLatencyCDF(LatencyDF[LatencyDF.StimID == 'A'], title='', color=OdorColorMLR['A'], TWOdor=[0, 2], ax=sub6)
 sub6.set_xlabel('', size=LS)
 sub6.set_ylabel('CDF', size=LS, labelpad=0)
 sub6.tick_params(axis='both', length=TickLength, labelsize=TLS)
@@ -473,7 +477,7 @@ sub8.spines["top"].set_visible(False)
 sub8.set_xlim(xlimClose[0], 2)
 sub8.set_ylim(0.1, 1.01)
 sub8.text(-0.42, 1.045, 'H', weight='bold', size=LetterSize)
-plt.savefig('Figure4test.png', dpi=300)
+plt.savefig(os.path.join('Figures', 'Figure4.png'), dpi=300)
 
 plt.show()
 

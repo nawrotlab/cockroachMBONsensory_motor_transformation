@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 import sys
-import Dataload
-import HelperFunctions
+from Functions import Dataload, HelperFunctions
 import os
 import glob
 
@@ -68,7 +67,7 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         print("Debbuging")
         df['SpikeRatesStim'] = df.parallel_apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000],
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - len(kernel) / 2000, TW[1] + len(kernel) / 2000],
                                                    kernel), axis=1)
         df['BLRate'] = df.parallel_apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
@@ -76,7 +75,7 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
         df['SpikeRatesBasel'] = df.apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel), axis=1)
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - len(kernel) / 2000, TW[1] + len(kernel) / 2000], kernel), axis=1)
         df['BLRate'] = df.apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
 
@@ -90,7 +89,7 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
     if Single_Trial_BL:
         if n_processes > 1:
             df['SpikeRatesStim'] = df.parallel_apply(
-                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim,kernel_Corr,
+                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr,
                                                                            x.BLRate), axis=1)
         else:
             df['SpikeRatesStim'] = df.apply(
@@ -165,7 +164,7 @@ def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A',
         df['SpikeRatesBasel'] = df.apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000],
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - len(kernel) / 2000, TW[1] + len(kernel) / 2000],
                                                    kernel), axis=1)
         df['BLRate'] = df.apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)

@@ -164,7 +164,7 @@ def GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset = 0
         print('false')
 
     # remove path from AnimalID - only works if all files are in the same folder
-    Path = os.path.dirname(file) + '/'
+    Path = os.path.dirname(file) + os.path.sep
     DataFrame['AnimalID'] = DataFrame.AnimalID.apply(
         lambda x: x.replace(Path, ""))  # Remove path from AnimalID
 

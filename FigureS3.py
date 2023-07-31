@@ -1,12 +1,20 @@
-import Dataload
-import HelperFunctions
-import EuclidianDistance
+from Functions import Dataload, HelperFunctions, EuclidianDistance
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import glob
 import pandas as pd
 import pickle
+from Data import DataSelection
+import argparse
+
+# command line optional argument for Datapath
+parser = argparse.ArgumentParser(description='Path to data folder')
+parser.add_argument('--path', type=str, default="Data",
+                    help='Path to data folder')
+args = parser.parse_args()
+Path = args.path
+
+Files = [os.path.join(Path, x) for x in DataSelection.DataCorr]
 
 OdorShift = 0.09
 TWOdor = [-3., 5]
@@ -27,18 +35,20 @@ OdorColorMLR = {'C': ((0.765, 0.588, 0.09, 1), (0.914, 0.737, 0.247, 1),(0.95, 0
 NeuroColor = {'MLR': (0.102, 0.416, 0.278), 'NoMLR': (0.502, 0.675, 0.6), 'Both': (0.298, 0.5411, 0.439, 1)}
 OdorMix = {'IsBe': (0.1, 0.1, 0.1, 1), 'IsCi': (0.5, 0.5, 0.5, 1), 'BeCi': (0.7, 0.7, 0.7, 1)}
 
-os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/FinalFigure")
-Files = glob.glob("*.mat")     # open all files in folder
 DataFrame = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=OdorShift)
-DataFrameMLR = pd.read_excel(io=file_name, sheet_name=sheet)       # create dataframe from Excel file
+DataFrameMLR = pd.read_excel(io=os.path.join(Path, file_name), sheet_name=sheet)       # create dataframe from Excel file
 DfCorr, _ = Dataload.MergeNeuronal_MLR(DataFrame, DataFrameMLR, TWMLR=TWMLR, T0=OdorShift)
 DfCorr = Dataload.LimitDFtoStimulus(DfCorr, FoodOdors)
 
 # Firing rates of single odors for subplot 1-3
 
 # Load unit maxima from Figure4
-with open("UnitMaxima.pkl", 'rb') as f:
-    Maxima = pickle.load(f)
+try:
+    with open("UnitMaxima.pkl", 'rb') as f:
+        Maxima = pickle.load(f)
+except FileNotFoundError:
+    print("File not found, please run Figure4.py first")
+    raise
 
 #Maxima = {4: 34.563429239543325, 5: 3.504108503812676, 6: 7.4513089046702765, 7: 13.582322125948838, 8: 83.18571139243342,
 # 9: 11.712228497724277, 10: 28.796190913727195, 11: 23.299364831206475, 12: 26.57745467630763, 13: 5.7757642496715205,
@@ -130,7 +140,7 @@ for OdorNum, Odor in enumerate(FoodOdors):
         SpRaMLR0 = SpRaStimMLR0[0][0] - np.average(SpRaBaselMLR0[0])
         SpRaStimMLR1 = HelperFunctions.kernel_rate(SpTTrStimMLR1, kernel, tlim=[tMin, tMax], pool=True)
         SpRaBaselMLR1 = HelperFunctions.kernel_rate(SpTTrBaselMLR1, kernel, tlim=[TWBaselOdor[0] * 1000,
-                                                                                 TWBaselOdor[1] * 1000], pool=True)
+                                                                                  TWBaselOdor[1] * 1000], pool=True)
         SpRaMLR1 = SpRaStimMLR1[0][0] - np.average(SpRaBaselMLR1[0])
         NormSpRaMLR0 = SpRaMLR0 / Maxima[Unit]
         NormSpRaMLR1 = SpRaMLR1 / Maxima[Unit]
@@ -303,5 +313,5 @@ sub5.set_position([l5, b4, w4, h1])
 sub5.text(-0.78, 1.07, 'E', size=LS, weight='bold')
 
 
-plt.savefig('SupplFig3.svg', dpi=300)
+plt.savefig(os.path.join('Figures', 'FigS3.svg'), dpi=300)
 plt.show()

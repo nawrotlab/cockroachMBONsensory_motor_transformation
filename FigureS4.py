@@ -1,12 +1,20 @@
-import Dataload
-import Latency
-import HelperFunctions
+from Functions import Dataload, Latency, HelperFunctions
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import glob
 import pandas as pd
 import seaborn as sns
+from Data import DataSelection
+import argparse
+
+# command line optional argument for Datapath
+parser = argparse.ArgumentParser(description='Path to data folder')
+parser.add_argument('--path', type=str, default="Data",
+                    help='Path to data folder')
+args = parser.parse_args()
+Path = args.path
+
+Files = [os.path.join(Path, x) for x in DataSelection.DataCorr]
 
 OdorShift = 0.09
 TWOdor = [0, 2]
@@ -21,10 +29,8 @@ OdorNames = ['1-Pen', '1-Hex', '1-Hep', '1-Oct', 'Hep', 'Oct', '2-Hep', 'Iso', '
 file_name = "MLR_data.xlsx"     # name for Excel file
 sheet = "Roh"
 AnimalsExclude = ["CA70", "CA69", "CA71"]  # exclude because of too low frame rate
-os.chdir("C:/Users/Cansu/Documents/Ephys_Auswertung/olfactory_visual/FinalFigure")
-Files = glob.glob("*.mat")     # open all files in folder
 DataFrame = Dataload.GenDF(Files, TWOdor, TWBaselOdor, OdorCodes, OdorNames, CorrectOdorOnset=OdorShift)
-DataFrameMLR = pd.read_excel(io=file_name, sheet_name=sheet)       # create dataframe from Excel file
+DataFrameMLR = pd.read_excel(io=os.path.join(Path, file_name), sheet_name=sheet)       # create dataframe from Excel file
 DataFrame.drop(DataFrame[[x[0:4] in AnimalsExclude for x in DataFrame['AnimalID']]].index,
         inplace=True)
 DataFrame.reset_index(drop=True, inplace=True)
@@ -118,5 +124,5 @@ sub2.set_position([l2, b1, w2, h2])
 sub2.text(-1, 1.85, 'B', size=LS, weight='bold')
 
 
-fig.savefig('FigS4Test.png', dpi=300)
+fig.savefig(os.path.join('Figures', 'FigS4.png'), dpi=300)
 plt.show()
