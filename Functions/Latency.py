@@ -42,7 +42,10 @@ def findNeuronalOnset(Border, Spikerate, Time):
 
 
 
-def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=True, Stims=['A', 'C', 'G'], n_processes=None):
+def Latency(df, sigmaFR, WidthFactor, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=True, Stims=['A', 'C', 'G'], n_processes=None):
+    Edge = sigmaFR * WidthFactor
+    kernel = HelperFunctions.exponential_kernel(sigmaFR, 1.0,
+                                                nstd=WidthFactor)  # generates kernel for spiketools.kernel_rate
     # if n_processes is None and 'pandarallel' in loaded_modules estimate number of cores
     if 'pandarallel' in sys.modules:
         if n_processes is None:
@@ -67,7 +70,7 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         print("Debbuging")
         df['SpikeRatesStim'] = df.parallel_apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - len(kernel) / 2000, TW[1] + len(kernel) / 2000],
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - Edge / 1000, TW[1] + Edge / 1000],
                                                    kernel), axis=1)
         df['BLRate'] = df.parallel_apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
@@ -75,25 +78,25 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
         df['SpikeRatesBasel'] = df.apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - len(kernel) / 2000, TW[1] + len(kernel) / 2000], kernel), axis=1)
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - Edge / 1000, TW[1] + Edge / 1000], kernel), axis=1)
         df['BLRate'] = df.apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
 
     Time = HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0],
-                                            [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel)
+                                            [TW[0] - Edge / 1000, TW[1] + Edge / 1000], kernel)
 
-    kernel_Corr = HelperFunctions.exponential_kernel(250, 1.0, nstd=6)
-    kernel_Corr = kernel_Corr/np.max(kernel_Corr)
-    kernel_Corr = kernel_Corr[len(kernel_Corr)//2:-1]
+    kernelCor = HelperFunctions.exponential_kernel(sigmaFR, 1.0, nstd=6)
+    kernelCor /= np.max(kernelCor)
+    kernelCor = kernelCor[len(kernelCor) // 2:-1]
 
     if Single_Trial_BL:
         if n_processes > 1:
             df['SpikeRatesStim'] = df.parallel_apply(
-                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr,
+                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernelCor,
                                                                            x.BLRate), axis=1)
         else:
             df['SpikeRatesStim'] = df.apply(
-                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr, x.BLRate),
+                lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernelCor, x.BLRate),
                 axis=1)
         df[['SpikeRatesBordersLow', 'SpikeRatesBordersHigh']] = df.apply(
             lambda x: GenerateSignificanceBorders(x.SpikeRatesBasel, Percentile=Border), axis=1,
@@ -105,10 +108,10 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
         df = df.join(tmpDF, on='RealUnit')
         if n_processes > 1:
             df['SpikeRatesStim'] = df.parallel_apply(
-                lambda x: df(x.SpikeRatesStim, kernel_Corr, x.BLRate), axis=1)
+                lambda x: df(x.SpikeRatesStim, kernelCor, x.BLRate), axis=1)
         else:
             df['SpikeRatesStim'] = df.apply(
-                lambda x: df(x.SpikeRatesStim, kernel_Corr, x.BLRate), axis=1)
+                lambda x: df(x.SpikeRatesStim, kernelCor, x.BLRate), axis=1)
 
         tmpDF = df.groupby('RealUnit').agg(
             {'SpikeRatesBasel': lambda y: list(np.hstack(y)), 'BLRate': np.mean}).apply(
@@ -130,7 +133,11 @@ def Latency(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Single_Trial_BL=Tr
 
 
 
-def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A', 'C', 'G'], n_processes=None):
+def Latency_pooled(df, sigmaFR, WidthFactor, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A', 'C', 'G'], n_processes=None):
+    Edge = sigmaFR * WidthFactor
+    kernel = HelperFunctions.exponential_kernel(sigmaFR, 1.0,
+                                           nstd=WidthFactor)  # generates kernel for spiketools.kernel_rate
+
     # if n_processes is None and 'pandarallel' in loaded_modules estimate number of cores
     if 'pandarallel' in sys.modules:
         if n_processes is None:
@@ -157,32 +164,34 @@ def Latency_pooled(df, kernel, TW, TW_BL, Border=0.95, MinSpike=1.0, Stims=['A',
         print("Debugging")
         df['SpikeRatesStim'] = df.parallel_apply(
             lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes,
-                                                   [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel), axis=1)
+                                                   [TW[0] - Edge / 1000, TW[1] + Edge / 1000], kernel),
+            axis=1)
+
         df['BLRate'] = df.parallel_apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
     else:
         df['SpikeRatesBasel'] = df.apply(
             lambda x: HelperFunctions.ToSpikeRates(x.BaselSpikeTimes, TW_BL, kernel), axis=1)
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - len(kernel) / 2000, TW[1] + len(kernel) / 2000],
+            lambda x: HelperFunctions.ToSpikeRates(x.StimSpikeTimes, [TW[0] - Edge / 1000, TW[1] + Edge / 1000],
                                                    kernel), axis=1)
         df['BLRate'] = df.apply(
             lambda x: (len(x.BaselSpikeTimes) / np.diff(TW_BL))[0], axis=1)
 
     Time = HelperFunctions.ToSpikeRatesTime(df['StimSpikeTimes'].iloc[0],
-                                            [TW[0]-len(kernel)/2000, TW[1]+len(kernel)/2000], kernel)
+                                            [TW[0] - Edge / 1000, TW[1] + Edge / 1000], kernel)
 
-    kernel_Corr = HelperFunctions.exponential_kernel(250, 1.0, nstd=6)
-    kernel_Corr = kernel_Corr/np.max(kernel_Corr)
-    kernel_Corr = kernel_Corr[len(kernel_Corr)//2:-1]
+    kernelCor = HelperFunctions.exponential_kernel(sigmaFR, 1.0, nstd=6)
+    kernelCor /= np.max(kernelCor)
+    kernelCor = kernelCor[len(kernelCor) // 2:-1]
 
 
     if n_processes > 1:
         df['SpikeRatesStim'] = df.parallel_apply(
-            lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr, x.BLRate), axis=1)
+            lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernelCor, x.BLRate), axis=1)
     else:
         df['SpikeRatesStim'] = df.apply(
-            lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernel_Corr, x.BLRate),
+            lambda x: HelperFunctions.CorrectFiringRateOnset_Optimized(x.SpikeRatesStim, kernelCor, x.BLRate),
             axis=1)
 
     df = df.groupby(['RealUnit', 'StimID']).agg(

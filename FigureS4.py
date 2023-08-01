@@ -44,9 +44,8 @@ MinSpike = 2.25
 TauFR = 250
 WidthFactor = 5
 dt = 1.
-kernel = HelperFunctions.exponential_kernel(TauFR, dt=dt, nstd=WidthFactor)
 
-Latencydf = Latency.Latency(DfCorr, kernel, TWStimulation, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
+Latencydf = Latency.Latency(DfCorr, TauFR, WidthFactor, TWStimulation, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
                             Single_Trial_BL=UseSingeTrialBL, Stims=['A', 'C', 'G'])
 Latencydf = Latencydf[Latencydf['MLR'] == True]
 Latencydf = Dataload.LimitDFtoStimulus(Latencydf, ['C'])
@@ -57,7 +56,7 @@ print(Latencydf.groupby('StimID').agg({'NeuronalOnset': [np.mean, np.min, np.max
 
 # calculate pooled latencies for subplot 2
 
-PooledLatencydf = Latency.Latency_pooled(DfCorr, kernel, TWStimulation, TWBaselOdor, MinSpike=MinSpike,
+PooledLatencydf = Latency.Latency_pooled(DfCorr, TauFR, WidthFactor, TWStimulation, TWBaselOdor, MinSpike=MinSpike,
                                          Border=BorderLim, Stims=['A', 'C', 'G'])
 PooledLatencydf = Dataload.LimitDFtoStimulus(PooledLatencydf, ['C'])
 
