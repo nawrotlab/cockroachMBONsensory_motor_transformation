@@ -94,7 +94,7 @@ sub1.set_xlabel("Unit", fontsize=LS)
 sub1.set_ylabel("Latency [s]", fontsize=LS)
 l1, b1, w1, h1 = sub1.get_position().bounds
 l1 = l1+0.01
-b1 = b1+0.03
+b1 = b1+0.045
 w1 = w1+0.22
 sub1.set_position([l1, b1, w1, h1])
 sub1.tick_params(axis='both', length=TickLength, labelsize=TLS)
@@ -119,6 +119,7 @@ sub2.set_ylabel("", fontsize=LS)
 l2, b2, w2, h2 = sub2.get_position().bounds
 w2 = w2-0.2
 l2 = l2+0.22
+b2 = b1
 sub2.set_position([l2, b1, w2, h2])
 sub2.text(-1, 1.85, 'B', size=LS, weight='bold')
 
