@@ -243,7 +243,7 @@ DFLatency.drop(DFLatency[[x[0:4] in AnimalsExclude for x in DFLatency['AnimalID'
         inplace=True)
 DFLatency.reset_index(drop=True, inplace=True)
 DFLatency, _ = Dataload.MergeNeuronal_MLR(DFLatency, DataFrameMLR, T0=OdorShift, TWMLR=TWMLR)
-LatencyDF = Latency.Latency(DFLatency, kernel, TWStimulation, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
+LatencyDF = Latency.Latency(DFLatency, TauFR, WidthFactor, TWStimulation, TWBaselOdor, MinSpike=MinSpike, Border=BorderLim,
                             Single_Trial_BL=UseSingeTrialBL, Stims=['A', 'C', 'G'])
 LatencyDF = LatencyDF[LatencyDF['MLR'] == True]
 
@@ -301,7 +301,7 @@ sub1.spines["top"].set_visible(False)
 sub1.set_aspect('equal')
 l1, b1, w1, h1 = sub1.get_position().bounds
 sub1.set_position([l1-0.0125, b1, w1, h1])
-sub1.text(-30, 52.75, 'A', weight='bold', size=LetterSize)
+sub1.text(-31, 52.75, 'A', weight='bold', size=LetterSize)
 
 # Sub2
 sub2 = fig.add_subplot(4, 2, 3)
@@ -323,7 +323,7 @@ w2 = w2 + 0.02
 sub2.set_position([l2, b2, w2, h2])
 sub2.set_xlim(0, 2000)
 sub2.set_ylim(-2, 30)
-sub2.text(-370, 31.5, 'B', weight='bold', size=LetterSize)
+sub2.text(-430, 31.5, 'B', weight='bold', size=LetterSize)
 
 # Sub3
 sub3 = fig.add_subplot(4, 2, 5)
@@ -333,7 +333,7 @@ sub3.fill_between(RateTimesOG, MeanSpRa1-StErSpRa1, MeanSpRa1+StErSpRa1, facecol
 sub3.plot(RateTimesOG, MeanSpRa1, linewidth=0.9, color=NeuroColor['MLR'])
 sub3.plot(SigTime, 0.85, marker='v', clip_on=False, color='k', markersize=2)
 sub3.plot((SigTime, SigTime), (-1, 0.8), '--k', linewidth=0.6)
-sub3.text(SigTime-45, 0.9, str(SigTime)+'ms', size=6)
+sub3.text(SigTime-95, 0.9, str(SigTime)+'ms', size=6)
 sub3.set_ylim(-0.5, 1)
 sub3.set_xlabel('Time [s]', size=LS)
 sub3.set_ylabel('Norm. rate', size=LS, labelpad=0)
@@ -350,7 +350,7 @@ w3 = w2
 sub3.set_position([l3, b3, w3, h3])
 sub3.set_xlim(0, 2000)
 sub3.set_ylim(-0.03, 1.02)
-sub3.text(-370, 1.07, 'C', weight='bold', size=LetterSize)
+sub3.text(-430, 1.07, 'C', weight='bold', size=LetterSize)
 
 # sub4
 sub4 = fig.add_subplot(4,2,7)
