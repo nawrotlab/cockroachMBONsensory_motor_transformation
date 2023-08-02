@@ -2,7 +2,9 @@
 
 ### Description
 We provide the code to reproduce all figures and supplemental figures of the paper "The mushroom body output 
-encodes behavioral decision during sensory-motor transformation" [^1]. The data is publicly available at...
+encodes behavioral decision during sensory-motor transformation" [^1]. The data is publicly available at 
+[GIN G-Node](https://gin.g-node.org/nawrotlab/Arican_et_al_2023_sensorimotor_transformation.git).
+
 
 ### Resporsitory structure
 #### Directory root
@@ -21,16 +23,22 @@ The directory "Functions" contains custom functions used in the analysis.
 
 ### Downloading the data
 The data can be either downloaded via the command line or via the browser. 
-#### Using the command line
-To download the data via the command line,
-run the following command in the terminal:
+#### Using the command line with git annex
+Make sure git and git-annex are installed on your computer. Create an account on gin and upload your public SSH key 
+to your gin profile. Then clone the repository using  
 ```bash
-git clone git@name_of_the_repository
+git clone git@gin.g-node.org:/nawrotlab/Arican_et_al_2023_sensorimotor_transformation.git
+cd Arican_et_al_2023_sensorimotor_transformation
+git annex get *
 ```
+Large files (>10MB) are replaced by placeholders. These filed are downloaded by the last command. Afterwards copy the 
+files from the created folder to the "Data" folder.
 #### Using the browser
 Download the latest release as a zip file by clicking on Releases on the main page at 
-https://web.gin.g-node.org/INM6/multielectrode_grasp. This zip file contains all mat files with the spikesorted data
-and a csv file containing the behavioral data. The zip file has to be extracted to the "Data" folder.
+https://gin.g-node.org/nawrotlab/Arican_et_al_2023_sensorimotor_transformation.git. This zip file contains most mat 
+files with the spikesorted data and a csv file containing the behavioral data. The zip file has to be extracted to the 
+"Data" folder. Some mat files are larger than 10 MB and are replaced by placeholders. 
+These files can be downloaded individually from the GIN repository (CA63, CA65a, CA71, CA73, CA76b, 79a, 79b, 81).
 
 
 ### Running the code
@@ -50,5 +58,5 @@ This command will run the code to reproduce Figure 2 of the paper. To reproduce 
 has to be run.
 
 
-[^1] DOI and link to the paper will be added once the paper is published.
+[^1]: DOI and link to the paper will be added once the paper is published.
 
