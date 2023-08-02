@@ -38,7 +38,7 @@ Download the latest release as a zip file by clicking on Releases on the main pa
 https://gin.g-node.org/nawrotlab/Arican_et_al_2023_sensorimotor_transformation.git. This zip file contains most mat 
 files with the spikesorted data and a csv file containing the behavioral data. The zip file has to be extracted to the 
 "Data" folder. Some mat files are larger than 10 MB and are replaced by placeholders. 
-These files can be downloaded individually from the GIN repository (CA63, CA65a, CA71, CA73, CA76b, 79a, 79b, 81).
+These files can be downloaded individually from the GIN repository (CA63, CA65a, CA71, CA73, CA76b, CA79a, CA79b, CA81).
 
 
 ### Running the code
