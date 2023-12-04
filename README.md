@@ -58,5 +58,7 @@ This command will run the code to reproduce Figure 2 of the paper. To reproduce 
 has to be run.
 
 
-[^1]: DOI and link to the paper will be added once the paper is published.
+[^1]: Cansu Arican, Felix Johannes Schmitt, Wolfgang Rössler, Martin Fritz Strube-Bloss, Martin Paul Nawrot. 2023. 
+The mushroom body output encodes behavioral decision during sensory-motor transformation. Current Biology, Volume 33, Issue 19. DOI: 
+[10.1016/j.cub.2023.08.016](https://doi.org/10.1016/j.cub.2023.08.016).
 
